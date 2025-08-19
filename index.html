@@ -1,299 +1,75 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>Webカウンター</title>
-  <style>
-    :root {
-      --bg: #f5f5f7;
-      --card-bg: #fff;
-      --border: #e5e5ea;
-      --accent: #007aff;
-      --danger: #ff3b30;
-      --radius: 14px;
-      --shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-      margin: 0; padding: 24px;
-      background: var(--bg); color: #111;
-    }
-    h1 {
-      font-size: 1.5rem; font-weight: 600;
-      margin: 0 0 20px;
-      text-align: center;
-    }
-
-    /* カウンター一覧 */
-    .counters {
-      display: grid;
-      gap: 16px;
-    }
-    .counter-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: transform 0.15s ease;
-    }
-    .counter-card:active { transform: scale(0.98); }
-    .counter-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .counter-label {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-    .counter-value {
-      font-size: 2rem;
-      font-weight: 700;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
-    }
-    .counter-actions {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-    }
-    .counter-actions button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 1rem;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: background 0.2s ease;
-    }
-    .plus { background: var(--accent); color:#fff; }
-    .minus { background: var(--border); }
-    .reset { background: var(--danger); color:#fff; }
-    .fullscreen-btn {
-      background: transparent;
-      border: none;
-      color: var(--accent);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-    .delete-btn {
-      background: transparent;
-      border: none;
-      color: var(--danger);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    /* 追加フォーム */
-    .add-form {
-      margin: 20px 0;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    .add-form input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 1rem;
-    }
-    .add-form button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: var(--radius);
-      background: var(--accent);
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    /* === 全画面表示 === */
-    .fullscreen {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
-      display: flex;
-      flex-direction: column;
-      z-index: 1000;
-      animation: fadeIn 0.3s ease;
-      color: #fff;
-      overflow: hidden;
-    }
-    .fullscreen-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      font-size: 1.2rem;
-    }
-    .close-full {
-      background: var(--danger);
-      border: none;
-      color: #fff;
-      font-size: 14px;
-      border-radius: var(--radius);
-      padding: 8px 14px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .fullscreen-center {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .fullscreen-count {
-      font-size: clamp(10rem, 30vw, 30rem);
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      animation: pop 0.2s ease;
-      text-align: center;
-      line-height: 1;
-    }
-    .fullscreen-btns {
-      display: flex; 
-      justify-content: center;
-      gap: 20px;
-      padding: 20px;
-    }
-    .fullscreen-btns button {
-      padding: 16px 22px;
-      border-radius: var(--radius);
-      border: none;
-      font-size: 22px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .fullscreen-btns button.accent { background: var(--accent); color:#fff; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
-    @keyframes pop {
-      from { transform: scale(1.15); }
-      to { transform: scale(1); }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簡単ペイントアプリ</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f0f0;
+  }
+  canvas {
+    border: 2px solid #333;
+    background-color: #fff;
+    cursor: crosshair;
+  }
+  .controls {
+    margin-bottom: 10px;
+  }
+  button, input[type=color], input[type=range] {
+    margin-right: 10px;
+  }
+</style>
 </head>
 <body>
-  <h1>Webカウンター</h1>
 
-  <!-- 追加フォーム -->
-  <div class="add-form">
-    <input id="newLabel" type="text" placeholder="カウンター名を入力">
-    <button onclick="addCounter()">追加</button>
-  </div>
+<h1>簡単ペイントアプリ</h1>
 
-  <!-- ホーム画面 -->
-  <div class="counters" id="counters"></div>
+<div class="controls">
+  <button id="clearBtn">クリア</button>
+  <input type="color" id="colorPicker" value="#000000">
+  <label>線の太さ: <input type="range" id="brushSize" min="1" max="50" value="5"></label>
+</div>
 
-  <!-- 全画面 -->
-  <div id="fullscreenContainer" style="display:none;"></div>
+<canvas id="paintCanvas" width="800" height="500"></canvas>
 
-  <script>
+<script>
+  const canvas = document.getElementById('paintCanvas');
+  const ctx = canvas.getContext('2d');
+  const colorPicker = document.getElementById('colorPicker');
+  const brushSize = document.getElementById('brushSize');
+  const clearBtn = document.getElementById('clearBtn');
 
-    function renderCounters(){
-      countersEl.innerHTML="";
-      state.forEach(item=>{
-        const card=document.createElement("div");
-        card.className="counter-card";
-        card.innerHTML=`
-          <div class="counter-header">
-            <div class="counter-label">${item.label}</div>
-            <div>
-              <button class="fullscreen-btn" onclick="openFullscreen('${item.id}')">⤢</button>
-              <button class="delete-btn" onclick="deleteCounter('${item.id}')">✕</button>
-            </div>
-          </div>
-          <div class="counter-value">${item.count}</div>
-          <div class="counter-actions">
-            <button class="minus" onclick="dec('${item.id}')">−</button>
-            <button class="plus" onclick="inc('${item.id}')">＋</button>
-            <button class="reset" onclick="reset('${item.id}')">リセット</button>
-          </div>
-        `;
-        countersEl.appendChild(card);
-      });
-    }
+  let drawing = false;
 
-    function addCounter(){
-      const input=document.getElementById("newLabel");
-      const label=input.value.trim();
-      if(label){
-        state.push({id:String(idCounter++),label,count:0});
-        input.value="";
-        renderCounters();
-      }
-    }
-    function deleteCounter(id){
-      const idx=state.findIndex(c=>c.id===id);
-      if(idx>=0){
-        state.splice(idx,1);
-        renderCounters();
-      }
-    }
+  canvas.addEventListener('mousedown', () => drawing = true);
+  canvas.addEventListener('mouseup', () => drawing = false);
+  canvas.addEventListener('mouseleave', () => drawing = false);
 
-    function openFullscreen(id){
-      const item=state.find(c=>c.id===id);
-      fullscreenContainer.style.display="flex";
-      fullscreenContainer.className="fullscreen";
-      fullscreenContainer.innerHTML=`
-        <div class="fullscreen-header">
-          <div>${item.label}</div>
-          <button class="close-full" onclick="closeFullscreen()">閉じる</button>
-        </div>
-        <div class="fullscreen-center">
-          <div id="fs-count" class="fullscreen-count">${item.count}</div>
-        </div>
-        <div class="fullscreen-btns">
-          <button onclick="dec('${item.id}')">−</button>
-          <button class="accent" onclick="inc('${item.id}')">＋</button>
-          <button onclick="reset('${item.id}')">リセット</button>
-        </div>
-      `;
-    }
-    function closeFullscreen(){
-      fullscreenContainer.style.display="none";
-      renderCounters();
-    }
+  canvas.addEventListener('mousemove', draw);
 
-    function inc(id){
-      const item=state.find(c=>c.id===id);
-      item.count++;
-      updateUI(item);
-    }
-    function dec(id){
-      const item=state.find(c=>c.id===id);
-      item.count--;
-      updateUI(item);
-    }
-    function reset(id){
-      const item=state.find(c=>c.id===id);
-      item.count=0;
-      updateUI(item);
-    }
-    function updateUI(item){
-      // ホーム画面更新
-      renderCounters();
-      // フルスクリーン更新
-      const fsCount=document.getElementById("fs-count");
-      if(fsCount){
-        fsCount.textContent=item.count;
-        fsCount.style.animation="none";
-        fsCount.offsetHeight; // reflow
-        fsCount.style.animation="pop 0.2s ease";
-      }
-    }
+  function draw(e) {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    // 初期表示
-    renderCounters();
-  </script>
+    ctx.fillStyle = colorPicker.value;
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize.value / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  clearBtn.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
+</script>
+
 </body>
 </html>
