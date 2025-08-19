@@ -95,11 +95,10 @@ const countersEl=document.getElementById("counters");
 const fullscreenContainer=document.getElementById("fullscreenContainer");
 const settingsBtn=document.getElementById("settingsBtn");
 const darkModeToggle=document.getElementById("darkModeToggle");
+let actionInProgress = {}; // 連打防止フラグ
 
 // ダークモード
-darkModeToggle.addEventListener("change",e=>{
-  document.body.classList.toggle("dark",e.target.checked);
-});
+darkModeToggle.addEventListener("change",e=>{document.body.classList.toggle("dark",e.target.checked);});
 
 // タップズーム防止
 let lastTap=0;
@@ -109,9 +108,6 @@ document.addEventListener('touchend',function(e){
   if(tapLength<300 && tapLength>0){ e.preventDefault(); }
   lastTap=currentTime;
 }, false);
-
-// 連打防止タイマー
-let lastActionTime={};
 
 function renderCounters(){
   countersEl.innerHTML="";
@@ -135,7 +131,6 @@ function renderCounters(){
     `;
     countersEl.appendChild(card);
 
-    // ホーム画面連打制御
     const plusBtn=card.querySelector(".plus");
     const minusBtn=card.querySelector(".minus");
     const resetBtn=card.querySelector(".reset");
@@ -148,7 +143,6 @@ function renderCounters(){
 }
 
 function keyboardChange(id,inputEl){
-  // 数字以外を除外
   let val = inputEl.value.replace(/[^0-9]/g,'');
   inputEl.value = val;
   const c = state.find(x=>x.id===id);
@@ -157,16 +151,24 @@ function keyboardChange(id,inputEl){
 }
 
 function updateCount(id, delta, resetFlag=false){
-  const now=Date.now();
-  if(lastActionTime[id] && now-lastActionTime[id]<150) return; // 150ms以内は無効化
-  lastActionTime[id]=now;
+  if(actionInProgress[id]) return;
+  actionInProgress[id]=true;
 
   const c = state.find(x=>x.id===id);
   if(resetFlag){c.count=0;} else {c.count+=delta;}
 
   const inputEl=document.querySelector(`.counter-value[data-id='${id}']`);
   if(inputEl) inputEl.value=c.count;
-  updateFullscreenCount(id);
+
+  const fsCount=document.getElementById("fs-count");
+  if(fsCount){
+    fsCount.textContent=c.count;
+    fsCount.style.animation="none";
+    fsCount.offsetHeight;
+    fsCount.style.animation="pop 0.2s";
+  }
+
+  setTimeout(()=>{actionInProgress[id]=false;},100);
 }
 
 function addCounter(){
