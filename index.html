@@ -17,19 +17,15 @@ h1{font-size:1.5rem;font-weight:600;margin:0;}
 .counter-card:active{transform:scale(0.98);}
 .counter-header{display:flex;justify-content:space-between;align-items:center;}
 .counter-label{font-size:1.2rem;font-weight:600;outline:none;}
-.counter-value{font-size:2rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;width:100%;max-width:100%;background:var(--card-bg);color:inherit;border:none;border-radius:var(--radius);text-align:center;transition:transform 0.2s ease;}
-.counter-actions{display:flex;justify-content:center;gap:12px;}
+.counter-value{font-size:2rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;width:100%;background:var(--card-bg);color:inherit;border:none;border-radius:var(--radius);text-align:center;}
+.counter-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
 .counter-actions button{padding:10px 16px;border:none;border-radius:var(--radius);font-size:1rem;cursor:pointer;transition:background 0.2s;}
 .plus{background:var(--accent);color:#fff;}
 .minus{background:var(--border);}
 .reset{background:var(--danger);color:#fff;}
-.fullscreen-btn{background:transparent;border:none;color:var(--accent);font-size:1.2rem;cursor:pointer;}
-.delete-btn{background:transparent;border:none;color:var(--danger);font-size:1.2rem;cursor:pointer;}
-.add-form{margin:20px 0;display:flex;gap:10px;justify-content:center;}
-.add-form input{flex:1;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:1rem;background:var(--card-bg);color:inherit;max-width:100%;transition:background-color 0.3s,color 0.3s;}
-.add-form button{padding:10px 16px;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:1rem;cursor:pointer;transition:background 0.3s;}
+.auto-btn{background:#34c759;color:#fff;}
 
-/* 全画面 */
+/* フルスクリーン */
 .fullscreen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;z-index:1000;color:#fff;overflow:hidden;animation:fadeIn 0.3s ease;}
 .fullscreen-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;font-size:1.2rem;}
 .close-full{background:var(--danger);border:none;color:#fff;font-size:14px;border-radius:var(--radius);padding:8px 14px;cursor:pointer;}
@@ -91,6 +87,7 @@ h1{font-size:1.5rem;font-weight:600;margin:0;}
 
 <script>
 let state=[],idCounter=0;
+let intervals={}; 
 const countersEl=document.getElementById("counters");
 const fullscreenContainer=document.getElementById("fullscreenContainer");
 const settingsBtn=document.getElementById("settingsBtn");
@@ -99,7 +96,7 @@ let actionInProgress = {};
 
 darkModeToggle.addEventListener("change",e=>{document.body.classList.toggle("dark",e.target.checked);});
 
-// 連打で画面ズーム防止
+// ダブルタップズーム防止
 let lastTap=0;
 document.addEventListener('touchend',function(e){
   const currentTime=new Date().getTime();
@@ -126,6 +123,7 @@ function renderCounters(){
         <button class="minus" data-id="${item.id}">−</button>
         <button class="plus" data-id="${item.id}">＋</button>
         <button class="reset" data-id="${item.id}">リセット</button>
+        <button class="auto-btn" onclick="toggleAuto('${item.id}')">${item.autoActive?"停止":"自動"}</button>
       </div>
     `;
     countersEl.appendChild(card);
@@ -155,20 +153,23 @@ function updateCount(id, delta, resetFlag=false){
   if(resetFlag){c.count=0;} else {c.count+=delta;}
   const inputEl=document.querySelector(`.counter-value[data-id='${id}']`);
   if(inputEl) inputEl.value=c.count;
-  const fsCount=document.getElementById("fs-count");
-  if(fsCount){fsCount.textContent=c.count; fsCount.style.animation="none"; fsCount.offsetHeight; fsCount.style.animation="pop 0.2s";}
+  updateFullscreenCount(id);
   setTimeout(()=>{actionInProgress[id]=false;},100);
 }
 
 function addCounter(){
   const input=document.getElementById("newLabel");
   let label=input.value.trim()||"無名のカウンター";
-  state.push({id:String(idCounter++),label,count:0});
+  state.push({id:String(idCounter++),label:label,count:0,autoActive:false,autoInterval:1000,autoDelta:1});
   input.value="";
   renderCounters();
 }
 
-function deleteCounter(id){state=state.filter(c=>c.id!==id);renderCounters();}
+function deleteCounter(id){
+  stopAuto(id);
+  state=state.filter(c=>c.id!==id);
+  renderCounters();
+}
 function rename(id,name){const c=state.find(x=>x.id===id);if(c)c.label=name.trim()||"無名のカウンター";}
 
 function openFullscreen(id){
@@ -206,6 +207,31 @@ function updateFullscreenCount(id){
   if(fsCount){fsCount.textContent=item.count;fsCount.style.animation="none";fsCount.offsetHeight;fsCount.style.animation="pop 0.2s";}
 }
 
+// 自動カウンター機能
+function toggleAuto(id){
+  const c=state.find(x=>x.id===id);
+  if(!c.autoActive){
+    startAuto(id);
+  }else{
+    stopAuto(id);
+  }
+  renderCounters();
+}
+
+function startAuto(id){
+  const c=state.find(x=>x.id===id);
+  if(!c) return;
+  c.autoActive=true;
+  intervals[id]=setInterval(()=>updateCount(id,c.autoDelta),c.autoInterval);
+}
+function stopAuto(id){
+  const c=state.find(x=>x.id===id);
+  if(!c) return;
+  c.autoActive=false;
+  clearInterval(intervals[id]);
+  delete intervals[id];
+}
+
 // 設定モーダル
 function openSettings(){document.getElementById("settingsModal").style.display="flex";}
 function closeSettings(){document.getElementById("settingsModal").style.display="none";}
@@ -220,9 +246,11 @@ function loadData(e){
   const file=e.target.files[0]; if(!file) return;
   const r=new FileReader();
   r.onload=function(ev){
-    state=JSON.parse(ev.target.result);
-    renderCounters();
-    alert("読み込みが完了しました！");
+    try{
+      state=JSON.parse(ev.target.result);
+      renderCounters();
+      alert("読み込みが完了しました！");
+    }catch(err){alert("読み込みエラー: "+err.message);}
   }
   r.readAsText(file);
 }
