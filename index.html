@@ -216,9 +216,14 @@ function updateFullscreenCount(id){
 function toggleAuto(id){
   const c=state.find(x=>x.id===id);
   if(!c.autoActive){
-    let sec = parseInt(prompt("自動カウントの間隔を秒で入力してください", "1"));
+    let sec = parseFloat(prompt("自動カウントの間隔を秒で入力してください", "1"));
     if(isNaN(sec) || sec<=0){alert("無効な値です");return;}
     c.autoInterval = sec*1000;
+
+    let delta = parseFloat(prompt("1回あたりの増加量を入力してください", "1"));
+    if(isNaN(delta)){delta = 1;}
+    c.autoDelta = delta;
+
     startAuto(id);
   }else{
     stopAuto(id);
