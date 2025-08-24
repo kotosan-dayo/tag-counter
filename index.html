@@ -23,7 +23,12 @@ h1{font-size:1.5rem;font-weight:600;margin:0;}
 .plus{background:var(--accent);color:#fff;}
 .minus{background:var(--border);}
 .reset{background:var(--danger);color:#fff;}
-.auto-btn{background:#34c759;color:#fff;}
+.auto{background:#34c759;color:#fff;}
+
+/* カウンター追加フォーム */
+.add-form{margin:20px 0;display:flex;gap:10px;justify-content:center;}
+.add-form input{flex:1;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:1rem;background:var(--card-bg);color:inherit;}
+.add-form button{padding:10px 16px;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:1rem;cursor:pointer;}
 
 /* フルスクリーン */
 .fullscreen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;z-index:1000;color:#fff;overflow:hidden;animation:fadeIn 0.3s ease;}
@@ -114,8 +119,8 @@ function renderCounters(){
       <div class="counter-header">
         <div class="counter-label" contenteditable="true" oninput="rename('${item.id}',this.innerText)">${item.label}</div>
         <div>
-          <button class="fullscreen-btn" onclick="openFullscreen('${item.id}')">⤢</button>
-          <button class="delete-btn" onclick="deleteCounter('${item.id}')">✕</button>
+          <button class="fullscreen-btn" onclick="openFullscreen('${item.id}')" style="background:transparent;border:none;color:var(--accent);font-size:1.2rem;cursor:pointer;">⤢</button>
+          <button class="delete-btn" onclick="deleteCounter('${item.id}')" style="background:transparent;border:none;color:var(--danger);font-size:1.2rem;cursor:pointer;">✕</button>
         </div>
       </div>
       <input type="number" class="counter-value" value="${item.count}" data-id="${item.id}" oninput="keyboardChange('${item.id}',this)">
@@ -123,7 +128,7 @@ function renderCounters(){
         <button class="minus" data-id="${item.id}">−</button>
         <button class="plus" data-id="${item.id}">＋</button>
         <button class="reset" data-id="${item.id}">リセット</button>
-        <button class="auto-btn" onclick="toggleAuto('${item.id}')">${item.autoActive?"停止":"自動"}</button>
+        <button class="auto" onclick="toggleAuto('${item.id}')">${item.autoActive?"停止":"自動"}</button>
       </div>
     `;
     countersEl.appendChild(card);
@@ -207,10 +212,13 @@ function updateFullscreenCount(id){
   if(fsCount){fsCount.textContent=item.count;fsCount.style.animation="none";fsCount.offsetHeight;fsCount.style.animation="pop 0.2s";}
 }
 
-// 自動カウンター機能
+// 自動カウンター機能（間隔指定付き）
 function toggleAuto(id){
   const c=state.find(x=>x.id===id);
   if(!c.autoActive){
+    let sec = parseInt(prompt("自動カウントの間隔を秒で入力してください", "1"));
+    if(isNaN(sec) || sec<=0){alert("無効な値です");return;}
+    c.autoInterval = sec*1000;
     startAuto(id);
   }else{
     stopAuto(id);
