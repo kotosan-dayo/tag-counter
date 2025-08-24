@@ -105,7 +105,11 @@ const settingsBtn=document.getElementById("settingsBtn");
 const darkModeToggle=document.getElementById("darkModeToggle");
 let actionInProgress = {}; 
 
-darkModeToggle.addEventListener("change",e=>{document.body.classList.toggle("dark",e.target.checked);});
+// ダークモード切替＋自動保存
+darkModeToggle.addEventListener("change", e => {
+  document.body.classList.toggle("dark", e.target.checked);
+  localStorage.setItem("darkMode", e.target.checked ? "1" : "0");
+});
 
 // ダブルタップズーム防止
 let lastTap=0;
@@ -121,15 +125,25 @@ function saveData(){
   localStorage.setItem("countersData", JSON.stringify(state));
 }
 
+// ページ読み込み時にデータ復元＋ダークモード復元
 function loadDataFromLocal(){
   const data = localStorage.getItem("countersData");
   if(data){
     try{
       state = JSON.parse(data);
     }catch(err){
-      console.error("データ復元エラー:",err);
-      state=[];
+      console.error("データ復元エラー:", err);
+      state = [];
     }
+  }
+
+  const darkMode = localStorage.getItem("darkMode");
+  if(darkMode === "1"){
+    document.body.classList.add("dark");
+    darkModeToggle.checked = true;
+  } else {
+    document.body.classList.remove("dark");
+    darkModeToggle.checked = false;
   }
 }
 
@@ -249,26 +263,25 @@ function closeFullscreen(){
 function updateFullscreenCount(id){
   const item=state.find(c=>c.id===id);
   const fsCount=document.getElementById("fs-count");
-  if(fsCount){fsCount.textContent=item.count;fsCount.style.animation="none";fsCount.offsetHeight;fsCount.style.animation="pop 0.2s";}
+  if(fsCount){
+    fsCount.textContent=item.count;
+    fsCount.style.animation="none"; fsCount.offsetHeight; fsCount.style.animation="pop 0.2s";
+  }
 }
 
-// 自動カウンター（小数・間隔指定可）
+// 自動カウンター
 function toggleAuto(id){
   const c=state.find(x=>x.id===id);
   if(!c.autoActive){
     let sec = parseFloat(prompt("自動カウントの間隔を秒で入力してください", "1"));
     if(isNaN(sec) || sec<=0){alert("無効な値です");return;}
     c.autoInterval = sec*1000;
-
-    let delta = parseFloat(prompt("1回あたりの増加量を入力してください", "1"));
-    if(isNaN(delta)){delta=1;}
-    c.autoDelta = delta;
-
     startAuto(id);
-  }else{
+  } else {
     stopAuto(id);
   }
   renderCounters();
+  saveData();
 }
 
 function startAuto(id){
@@ -284,14 +297,19 @@ function stopAuto(id){
   c.autoActive=false;
   clearInterval(intervals[id]);
   delete intervals[id];
-  saveData();
 }
 
 // 設定モーダル
 function openSettings(){document.getElementById("settingsModal").style.display="flex";}
 function closeSettings(){document.getElementById("settingsModal").style.display="none";}
 
-// データ読み込み（ファイル）
+// データの手動読み込み（従来の機能）
+function saveDataFile(){
+  const blob=new Blob([JSON.stringify(state)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="counters.json";a.click();
+  alert("データ保存用ファイルをダウンロードします");
+}
+
 function loadData(e){
   const file=e.target.files[0]; if(!file) return;
   const r=new FileReader();
@@ -300,7 +318,7 @@ function loadData(e){
       state=JSON.parse(ev.target.result);
       renderCounters();
       saveData();
-      alert("読み込みが完了しました！");
+      alert("読み込み完了！");
     }catch(err){alert("読み込みエラー: "+err.message);}
   }
   r.readAsText(file);
